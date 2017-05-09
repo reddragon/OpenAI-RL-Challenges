@@ -18,6 +18,15 @@ from math import sqrt, ceil
 
 from torch.autograd import Variable
 
+CHECKPOINT_FILE_PATH = 'cart_pole_ckpt'
+VIDEO_DATA_PATH = 'cart_pole_data'
+NUM_EPISODES = 300
+MIN_ITERS = 100
+LEARNING_RATE = 0.002
+GAMMA = 0.99
+REWARD_THRESHOLD = 195.0
+REWARD_AVG_WINDOW_LEN = 100.0
+
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -47,14 +56,6 @@ def save(net, optimizer, epoch):
     print ("Saving checkpoint to file '{}'" . format(CHECKPOINT_FILE_PATH))
     torch.save(state, CHECKPOINT_FILE_PATH)
 
-CHECKPOINT_FILE_PATH = 'rl_ckpt'
-NUM_EPISODES = 300
-MIN_ITERS = 100
-LEARNING_RATE = 0.002
-GAMMA = 0.99
-REWARD_THRESHOLD = 195.0
-REWARD_AVG_WINDOW_LEN = 100.0
-
 # Returns net, optimizer, epoch
 def load():
     net = Net()
@@ -72,7 +73,7 @@ def load():
     return net, optimizer, epoch
 
 # Boiler plate to get a gym object
-def get_gym(record=False, outdir='rl-data'):
+def get_gym(record=False, outdir=VIDEO_DATA_PATH):
     gym.undo_logger_setup()
     logger = logging.getLogger()
     formatter = logging.Formatter('[%(asctime)s] %(message)s')
