@@ -50,9 +50,9 @@ while episode < NUM_EPISODES:
         if allow or prev_state != new_state:
             prev_val = Q[prev_state][action]
             next_max = np.max(Q[new_state, :])
-            Q[prev_state][action] = prev_val + LEARNING_RATE * \
+            after_val = prev_val + LEARNING_RATE * \
                 (reward + GAMMA * next_max - prev_val)
-            after_val = Q[prev_state][action]
+            Q[prev_state][action] = after_val
 
             if episode == check:
                 print(
