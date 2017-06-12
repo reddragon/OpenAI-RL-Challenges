@@ -24,10 +24,11 @@ ENV_NAME = 'FrozenLake-v0'
 ENV_INTERNAL_NAME = 'frozen-lake-nn'
 CHECKPOINT_FILE_PATH = '{}-ckpt'.format(ENV_INTERNAL_NAME)
 
+
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(16,4)
+        self.fc1 = nn.Linear(16, 4)
 
         # self.fc1 = nn.Linear(16,16)
         # self.fc2 = nn.Linear(16,4)
@@ -39,14 +40,16 @@ class Net(nn.Module):
         return x
         # return F.sigmoid(x)
 
+
 def save(net, optimizer, epoch):
     state = {
         'state_dict': net.state_dict(),
         'optimizer': optimizer.state_dict(),
         'epoch': epoch,
     }
-    print ("Saving checkpoint to file '{}'" . format(CHECKPOINT_FILE_PATH))
+    print("Saving checkpoint to file '{}'".format(CHECKPOINT_FILE_PATH))
     torch.save(state, CHECKPOINT_FILE_PATH)
+
 
 # Returns net, optimizer, epoch
 def load():
@@ -56,13 +59,14 @@ def load():
     epoch = 0
 
     if os.path.isfile(CHECKPOINT_FILE_PATH):
-        print ("Loading checkpoint from file '{}'" . format(CHECKPOINT_FILE_PATH))
+        print("Loading checkpoint from file '{}'".format(CHECKPOINT_FILE_PATH))
         checkpoint = torch.load(CHECKPOINT_FILE_PATH)
         epoch = checkpoint['epoch']
         net.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
 
     return net, optimizer, epoch
+
 
 # Boiler plate to get a gym object
 def get_gym(record=False):
@@ -80,12 +84,14 @@ def get_gym(record=False):
         env = wrappers.Monitor(env, directory=outdir, force=True)
     return env
 
+
 # Return a one-hot vector with the idx bit turned on
 def get_oh_vector(idx):
-    state_arr = np.zeros((1,16))
+    state_arr = np.zeros((1, 16))
     state_arr[0][idx] = 1
     state_var = Variable(torch.Tensor(state_arr))
     return state_var
+
 
 env = get_gym(record=True)
 if SEED >= 0:
@@ -121,7 +127,7 @@ while episode < NUM_EPISODES and not pause_training:
         output_arr = output_var.data.numpy()
 
         p = np.random.rand()
-        if p < 1.0/((episode/200.0) + 5.0):
+        if p < 1.0 / ((episode / 200.0) + 5.0):
             action = env.action_space.sample()
         else:
             action = np.argmax(output_arr)
@@ -157,12 +163,13 @@ while episode < NUM_EPISODES and not pause_training:
         optimizer.zero_grad()
         second_output_var = net(state_var)
 
-        loss = ((target_var - second_output_var) ** 2).sum()
+        loss = ((target_var - second_output_var)**2).sum()
         loss.backward()
         optimizer.step()
 
         if verbose:
-            print("Episode: {}, Loss: {}".format(episode, loss.data.numpy()[0]))
+            print("Episode: {}, Loss: {}".format(episode,
+                                                 loss.data.numpy()[0]))
             optimizer.zero_grad()
             check_var = net(state_var)
             print 'Second output var: ', second_output_var.data.numpy()
@@ -170,7 +177,7 @@ while episode < NUM_EPISODES and not pause_training:
 
         if reward != 0:
             # if print_stats:
-                # print("----> Reward wasnt zero in Episode {} at state: {}, from state: {}, taking: {}  <----".format(episode, new_state, prev_state, action))
+            # print("----> Reward wasnt zero in Episode {} at state: {}, from state: {}, taking: {}  <----".format(episode, new_state, prev_state, action))
             non_zero_rewards = non_zero_rewards + 1
             # pause_training = True
             # break
@@ -181,11 +188,14 @@ while episode < NUM_EPISODES and not pause_training:
             success = sum(last_hundred_epochs) * 1.0 / len(last_hundred_epochs)
             overall_success = sum(rewards) * 1.0 / len(rewards)
             if print_stats and episode % 10 == 0:
-                print("Episode: {}, Success Ratio in Last 100 Epochs: {}, Overall Ratio: {}".format(episode, success, overall_success))
+                print(
+                    "Episode: {}, Success Ratio in Last 100 Epochs: {}, Overall Ratio: {}".
+                    format(episode, success, overall_success))
     episode = episode + 1
 
     if verbose:
         print '\n\n'
 
-print('Non Zero Rewards: {}, Ratio: {}'.format(non_zero_rewards, non_zero_rewards * 1.0 / NUM_EPISODES))
+print('Non Zero Rewards: {}, Ratio: {}'.format(
+    non_zero_rewards, non_zero_rewards * 1.0 / NUM_EPISODES))
 env.close()
