@@ -152,6 +152,7 @@ while episode < NUM_EPISODES and not pause_training:
         if verbose:
             print("Episode: {}, Loss: {}".format(episode,
                                                  loss.data.numpy()[0]))
+            check_var = net(state_var)
             print 'After backprop output: ', check_var.data.numpy()
 
         if reward != 0:
