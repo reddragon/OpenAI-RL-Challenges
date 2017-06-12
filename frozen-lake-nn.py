@@ -14,11 +14,12 @@ from gym import wrappers
 from torch.autograd import Variable
 
 SEED = 1234
-# NUM_EPISODES = 5
+NUM_EPISODES = 20000
 
 # Hyperparams
-# LEARNING_RATE = 0.05
 GAMMA = 0.99
+REWARD_CONST = 3.0
+LEARNING_RATE = 1e-2
 
 ENV_NAME = 'FrozenLake-v0'
 ENV_INTERNAL_NAME = 'frozen-lake-nn'
@@ -30,15 +31,9 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.fc1 = nn.Linear(16, 4)
 
-        # self.fc1 = nn.Linear(16,16)
-        # self.fc2 = nn.Linear(16,4)
-
     def forward(self, x):
         x = self.fc1(x)
-        # x = F.relu(x)
-        # x = self.fc2(x)
         return x
-        # return F.sigmoid(x)
 
 
 def save(net, optimizer, epoch):
@@ -104,13 +99,7 @@ non_zero_rewards = 0
 rewards = []
 print_stats = True
 verbose = False
-NUM_EPISODES = 100000
-REWARD_CONST = 3.0
-LEARNING_RATE = 1e-2
 
-# Initialize the Q-table with one row per state, and one column per action.
-check = -1
-# Q = np.zeros((16,4))
 net, optimizer, _ = load()
 pause_training = False
 
@@ -126,8 +115,7 @@ while episode < NUM_EPISODES and not pause_training:
         output_var = net(state_var)
         output_arr = output_var.data.numpy()
 
-        p = np.random.rand()
-        if p < 1.0 / ((episode / 200.0) + 5.0):
+        if np.random.rand() < 1.0 / ((episode / 200.0) + 5.0):
             action = env.action_space.sample()
         else:
             action = np.argmax(output_arr)
@@ -138,9 +126,6 @@ while episode < NUM_EPISODES and not pause_training:
             print 'output_arr: ', output_arr
             print 'action picked: {}'.format(action)
 
-        # action = env.action_space.sample()
-
-        # env.render()
         path_len = path_len + 1
         new_state, reward, done, _ = env.step(action)
         new_state_var = get_oh_vector(new_state)
@@ -160,24 +145,16 @@ while episode < NUM_EPISODES and not pause_training:
             print 'expected_q_val: ', expected_q_val
             print 'target_arr: ', target_arr
 
-        optimizer.zero_grad()
-        second_output_var = net(state_var)
-
-        loss = ((target_var - second_output_var)**2).sum()
+        loss = ((target_var - output_var)**2).sum()
         loss.backward()
         optimizer.step()
 
         if verbose:
             print("Episode: {}, Loss: {}".format(episode,
                                                  loss.data.numpy()[0]))
-            optimizer.zero_grad()
-            check_var = net(state_var)
-            print 'Second output var: ', second_output_var.data.numpy()
             print 'After backprop output: ', check_var.data.numpy()
 
         if reward != 0:
-            # if print_stats:
-            # print("----> Reward wasnt zero in Episode {} at state: {}, from state: {}, taking: {}  <----".format(episode, new_state, prev_state, action))
             non_zero_rewards = non_zero_rewards + 1
             # pause_training = True
             # break
